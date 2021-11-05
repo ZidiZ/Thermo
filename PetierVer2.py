@@ -7,6 +7,18 @@ import time
 import datetime
 import keyboard
 import threading
+import re
+
+ser = serial.Serial('COM3',9600)
+real_time_temp = ser.readline() # a global
+toolvariable1 = re.findall(r"\d+\.?\d*",real_time_temp) #filt the number out
+toolvariable2 = toolvariable1[-1]
+
+toolvariable3 = float(toolvariable2)*10
+real_time_numTemp = int(toolvariable3)
+
+
+neutral = 320 #32 Degree C just make it as a global
 
 class Peltier_Control(Frame):			 
 	def __init__(self, master=None):
@@ -28,14 +40,14 @@ class Peltier_Control(Frame):
 
 	def createWidgets(self):
 		uni_image = PhotoImage(file="C:/Users/Administrator/Downloads/project/PeltierControlDemoOriginal/PeltierControlDemoOriginal/res/Uni.png")		
-	#	uni_image = PhotoImage(file="res/Uni.png")
+		#uni_image = PhotoImage(file="./res/Uni.png")
 		self.image_label = Label(image=uni_image)
 		self.image_label.uni_image = uni_image
 		self.image_label.grid(sticky=N)
 
-		self.temp_label = Label(self, text="***  Enter temperatures in tenths of 1C  ***\n e.g. 35C = 350\n", font=tkFont.Font(family="Helvetica", weight="bold", size=15))
+		self.temp_label = Label(self, text="***  Thermo feedback experiment version1 \n Zidi Zhou CS\n", font=tkFont.Font(family="Helvetica", weight="bold", size=15))
 		self.temp_label.grid(column=1, row=1, columnspan=4)
-		#self.temp_label.focus_set()       ####
+		#self.temp_label.focus_set()       ####this is something to do with the keyboard event
 		#self.temp_label.pack()
 		self.temp_label.bind("<Key>",self.func)
 	
@@ -58,41 +70,102 @@ class Peltier_Control(Frame):
 		self.p2_disable.grid(column=4, row=3)
 		
 		self.quitButton = Button (self, text='Quit', command=self.quit_control)	   
-		self.quitButton.grid(column=1, row=12, sticky=W)   
+		self.quitButton.grid(column=2, row=5, sticky=W)   
 		
 		self.timebutton = Button (self, text="printTime",command=self.printtime)   
-		self.timebutton.grid(column=2, row=6, sticky=W) 
+		self.timebutton.grid(column=3, row=5, sticky=W) 
 		#self.timebutton.bind("<Key>",self.printtime)     a failed function for binding the key event
 		
+		self.tempbutton = Button (self, text="print Real-Temp",command=self.printRealtime)   
+		self.tempbutton.grid(column=4, row=5, sticky=W) 
 		
-		self.heatbutton = Button (self, text="heat",command=self.do_heat)   #try to heat the pump automatically
-		self.heatbutton.grid(column=2, row=18, sticky=W) 
+		self.heatbutton = Button (self, text="  round1  ",command=self.do_heat1)   #pre-set round 1
+		self.heatbutton.grid(column=1, row=4, sticky=W) 
+
+		self.heatbutton = Button (self, text="  round2  ",command=self.do_heat2)   #real-time temp round 1
+		self.heatbutton.grid(column=2, row=4, sticky=W) 
+
+		self.heatbutton = Button (self, text="  round3  ",command=self.do_heat1)   #pre-set round 2
+		self.heatbutton.grid(column=3, row=4, sticky=W) 
+
+		self.heatbutton = Button (self, text="  round4  ",command=self.do_heat1)   #real-time temp round 2
+		self.heatbutton.grid(column=4, row=4, sticky=W) 
 
 
 	def func(self):   #######it's a test function for .bind()
 		print("event.char =", self.char)
 		print("event.keycode =", self.keycode)	
     
-	def do_heat(self):  #cycle begin
-		print("start heating")
+	def do_heat1(self):  #cycle begin  round1 pre-set normal pace
+		stamp=datetime.datetime.now()
+		print("start round1")
 		
 		self.temp_change(320) #neutral temp 3s
 		time.sleep(3)
 
-		print("3 degree up")
+		print(stamp,"3 degree up")
 		self.temp_change(350) #3 degree up 5s
 		time.sleep(5)
 
-		print("back to neutral")
+		print(stamp,"back to neutral")
 		self.temp_change(320) #neutral temp 3s
 		time.sleep(3)
 
-		print("3 degree down")
+		print(stamp,"3 degree down")
 		self.temp_change(290) #3 degree dowm 3s
+		time.sleep(5)
+
+		print(stamp,"back to neutral")
+		self.temp_change(320) #neutral temp 3s
 		time.sleep(3)
 
-		print("back to neutral")
+		print(stamp,"6 degree down")
+		self.temp_change(260) #6 degree dowm 3s
+		time.sleep(5)
+
+		print(stamp,"back to neutral")
 		self.temp_change(320) #neutral temp 3s
+		time.sleep(3)
+
+		self.do_disable_1()
+
+	def do_heat2(self):  #cycle begin  round2 real-time normal pace
+		stamp=datetime.datetime.now()
+		print("start round2")
+		
+		self.real_change_up(0) #skin temp 3s
+		time.sleep(3)
+
+		print(stamp,"3 degree up")
+		self.real_change_up(30) #3 degree up 5s
+		time.sleep(5)
+
+		print(stamp,"back to skin temp")
+		self.real_change_up(0)   #skin temp 3s
+		time.sleep(3)
+
+		print(stamp,"3 degree down")
+		self.real_change_up(-30) #3 degree dowm 3s
+		time.sleep(5)
+
+		print(stamp,"back to skin temp")
+		self.real_change_up(0) #neutral temp 3s
+		time.sleep(3)
+
+		print(stamp,"6 degree down")
+		self.real_change_up(-60) #6 degree dowm 3s
+		time.sleep(5)
+
+		print(stamp,"back to skin temp")
+		self.real_change_up(0) #neutral temp 3s
+		time.sleep(3)
+
+		print(stamp,"3 degree up")
+		self.real_change_up(30) #3 degree up 5s
+		time.sleep(5)
+
+		print(stamp,"back to skin temp")
+		self.real_change_up(0)   #skin temp 3s
 		time.sleep(3)
 
 		self.do_disable_1()
@@ -101,6 +174,17 @@ class Peltier_Control(Frame):
 		temp = self.peltier.convert(num) 
 		self.peltier.set_temp(1, temp)
 		self.peltier.read_line()
+	
+	def real_change_up(self,change_vol):   #get real-time temp and up X(change_vol) degreeC
+		temp = self.peltier.convert(real_time_numTemp+change_vol) 
+		self.peltier.set_temp(1, temp) #by here add pump 2
+		self.peltier.read_line()
+	
+	""" def real_change_down(self,real_time_temp,change_vol):   #get real-time temp and go down 3 degreeC
+		temp = self.peltier.convert(real_time_temp-change_vol) 
+		self.peltier.set_temp(1, temp) #by here add pump 2
+		self.peltier.read_line() """
+
 
 	def do_temp1_button(self):
 		temp = self.peltier.convert(self.p1_temp.get())
@@ -158,6 +242,9 @@ class Peltier_Control(Frame):
 	def printtime(self):
 		stamp=datetime.datetime.now()
 		print (stamp)
+	
+	def printRealtime(self):
+		print(real_time_temp)
 
 
 
@@ -165,6 +252,12 @@ app = Peltier_Control()
 app.master.title("test code version2")
 
 app.mainloop() 
+
+
+""" with open('testfile1.txt', 'w+') as f:
+    while True:
+        line = ser.readline()
+        print(line.strip(), " t = %s \n " % (datetime.datetime.now())) """
 
 """ keyboard.hook(app.printtime)
 keyboard.wait() """
