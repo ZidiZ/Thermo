@@ -180,11 +180,6 @@ class Peltier_Control(Frame):
 		self.peltier.set_temp(1, temp) #by here add pump 2
 		self.peltier.read_line()
 	
-	""" def real_change_down(self,real_time_temp,change_vol):   #get real-time temp and go down 3 degreeC
-		temp = self.peltier.convert(real_time_temp-change_vol) 
-		self.peltier.set_temp(1, temp) #by here add pump 2
-		self.peltier.read_line() """
-
 
 	def do_temp1_button(self):
 		temp = self.peltier.convert(self.p1_temp.get())
