@@ -44,7 +44,7 @@ class GUI():
         self.text.pack(side="top", fill=BOTH, padx=10, pady=10)
         self.scrollBar.config(command=self.text.yview)
 
-        sys.stdout = re_Text(self.text)
+        sys.stdout = re_Text(self.text)    #what is sys??
         root.mainloop()
 
     def __show(self):

@@ -79,7 +79,7 @@ class Peltier_Control(Frame):
 		self.tempbutton = Button (self, text="print Real-Temp",command=self.printRealtime)   
 		self.tempbutton.grid(column=4, row=5, sticky=W) 
 		
-		self.heatbutton = Button (self, text="  round1  ",command=self.do_heat1)   #pre-set round 1
+		self.heatbutton = Button (self, text="  round1  ",command=self.round1)   #pre-set round 1
 		self.heatbutton.grid(column=1, row=4, sticky=W) 
 
 		self.heatbutton = Button (self, text="  round2  ",command=self.do_heat2)   #real-time temp round 1
@@ -97,37 +97,55 @@ class Peltier_Control(Frame):
 		print("event.keycode =", self.keycode)	
     
 	def do_heat1(self):  #cycle begin  round1 pre-set normal pace
+		f = open('heat1.txt', 'w+')  #round 1 open the file #####
 		stamp=datetime.datetime.now()
-		print("start round1")
+		print(stamp,"start round1")
+		print >> f, stamp,"start round1"                   #signal
+
+		stamp=datetime.datetime.now()
+		self.temp_change(320)                              #neutral temp 5s
+		print >> f, stamp,"neutral"  #in file
+		print(stamp,"neutral")
+		time.sleep(5)
 		
-		self.temp_change(320) #neutral temp 3s
-		time.sleep(3)
-
-		print(stamp,"3 degree up")
-		self.temp_change(350) #3 degree up 5s
+		stamp=datetime.datetime.now()
+		self.temp_change(350)  
+		print >> f, stamp,"3 degree up"  #in file           #3 degree up 5s
+		print(stamp,"3 degree up") 
 		time.sleep(5)
 
+		stamp=datetime.datetime.now()
+		self.temp_change(320)                              #neutral temp 5s
+		print >> f, stamp,"back to neutral"  #in file
 		print(stamp,"back to neutral")
-		self.temp_change(320) #neutral temp 3s
-		time.sleep(3)
-
-		print(stamp,"3 degree down")
-		self.temp_change(290) #3 degree dowm 3s
 		time.sleep(5)
 
-		print(stamp,"back to neutral")
-		self.temp_change(320) #neutral temp 3s
-		time.sleep(3)
-
-		print(stamp,"6 degree down")
-		self.temp_change(260) #6 degree dowm 3s
+		stamp=datetime.datetime.now()
+		self.temp_change(290)  
+		print >> f, stamp,"3 degree down"  #in file        #3 degree downp 5s
+		print(stamp,"3 degree up") 
 		time.sleep(5)
 
+		stamp=datetime.datetime.now()
+		self.temp_change(320)                              #neutral temp 5s
+		print >> f, stamp,"back to neutral"  #in file
 		print(stamp,"back to neutral")
-		self.temp_change(320) #neutral temp 3s
-		time.sleep(3)
+		time.sleep(5)
+
+		stamp=datetime.datetime.now()
+		self.temp_change(260)  
+		print >> f, stamp,"6 degree down"  #in file        #6 degree downp 5s
+		print(stamp,"6 degree up") 
+		time.sleep(5)
+
+		stamp=datetime.datetime.now()
+		self.temp_change(320)                              #neutral temp 5s
+		print >> f, stamp,"back to neutral"  #in file
+		print(stamp,"back to neutral")
+		time.sleep(5)
 
 		self.do_disable_1()
+		f.close()
 
 	def do_heat2(self):  #cycle begin  round2 real-time normal pace
 		stamp=datetime.datetime.now()
@@ -239,7 +257,16 @@ class Peltier_Control(Frame):
 		print (stamp)
 	
 	def printRealtime(self):
-		print(real_time_temp)
+		""" thread_thred1 = threading.Thread(target=self.printtime)
+		thread_thred1.start() """
+		print("test")	
+		
+	def round1(self):
+		T1 = threading.Thread(target=self.do_heat1, args=())
+		T1.start()
+
+	
+
 
 
 
