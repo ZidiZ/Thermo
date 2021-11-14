@@ -13,12 +13,13 @@ ser = serial.Serial('COM3',9600)
 real_time_temp = ser.readline() # a global
 toolvariable1 = re.findall(r"\d+\.?\d*",real_time_temp) #filt the number out
 toolvariable2 = toolvariable1[-1]
-
 toolvariable3 = float(toolvariable2)*10
-real_time_numTemp = int(toolvariable3)
+real_time_numTemp = int(toolvariable3)    #used in temp change round 2&4
 
 
 neutral = 320 #32 Degree C just make it as a global
+
+timefile = open('hit-time.txt', 'w+')    #recourd the printtime button in the whole process
 
 class Peltier_Control(Frame):			 
 	def __init__(self, master=None):
@@ -45,7 +46,7 @@ class Peltier_Control(Frame):
 		self.image_label.uni_image = uni_image
 		self.image_label.grid(sticky=N)
 
-		self.temp_label = Label(self, text="***  Thermo feedback experiment version1 \n Zidi Zhou CS\n", font=tkFont.Font(family="Helvetica", weight="bold", size=15))
+		self.temp_label = Label(self, text="Thermo feedback experiment version1 ", font=tkFont.Font(family="Helvetica", weight="bold", size=15))
 		self.temp_label.grid(column=1, row=1, columnspan=4)
 		#self.temp_label.focus_set()       ####this is something to do with the keyboard event
 		#self.temp_label.pack()
@@ -70,13 +71,16 @@ class Peltier_Control(Frame):
 		self.p2_disable.grid(column=4, row=3)
 		
 		self.quitButton = Button (self, text='Quit', command=self.quit_control)	   
-		self.quitButton.grid(column=2, row=5, sticky=W)   
+		self.quitButton.grid(column=1, row=5, sticky=W)   
 		
 		self.timebutton = Button (self, text="printTime",command=self.printtime)   
-		self.timebutton.grid(column=3, row=5, sticky=W) 
+		self.timebutton.grid(column=2, row=5, sticky=W) 
 		#self.timebutton.bind("<Key>",self.printtime)     a failed function for binding the key event
 		
-		self.tempbutton = Button (self, text="print Real-Temp",command=self.printRealtime)   
+		self.tempbutton = Button (self, text="start measuring",command=self.printRealtime)    
+		self.tempbutton.grid(column=3, row=5, sticky=W) 
+
+		self.tempbutton = Button (self, text="stop measuring",command=self.printRealtime)   
 		self.tempbutton.grid(column=4, row=5, sticky=W) 
 		
 		self.heatbutton = Button (self, text="  round1  ",command=self.round1)   #pre-set round 1
@@ -99,10 +103,10 @@ class Peltier_Control(Frame):
 	def do_heat1(self):  #cycle begin  round1 pre-set normal pace
 		f = open('heat1.txt', 'w+')  #round 1 open the file #####
 		stamp=datetime.datetime.now()
-		print(stamp,"start round1")
-		print >> f, stamp,"start round1"                   #signal
+		print("start round1")
+		print >> f, "start round1"                   #signal
 
-		stamp=datetime.datetime.now()
+		
 		self.temp_change(320)                              #neutral temp 5s
 		print >> f, stamp,"neutral"  #in file
 		print(stamp,"neutral")
@@ -140,8 +144,8 @@ class Peltier_Control(Frame):
 
 		stamp=datetime.datetime.now()
 		self.temp_change(320)                              #neutral temp 5s
-		print >> f, stamp,"back to neutral"  #in file
-		print(stamp,"back to neutral")
+		print >> f, stamp,"back to neutral and close"  #in file
+		print(stamp,"back to neutral and close")
 		time.sleep(5)
 
 		self.do_disable_1()
@@ -249,11 +253,13 @@ class Peltier_Control(Frame):
 				
 			
 	def quit_control(self):
+		timefile.close()
 		self.peltier.close()
 		self.quit() 
 
 	def printtime(self):
 		stamp=datetime.datetime.now()
+		print >> timefile, stamp
 		print (stamp)
 	
 	def printRealtime(self):
