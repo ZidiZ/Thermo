@@ -18,6 +18,7 @@ real_time_numTemp = int(toolvariable3)    #used in temp change round 2&4
 
 
 neutral = 320 #32 Degree C just make it as a global
+flag = 0   #another global helps the measuring thread
 
 timefile = open('hit-time.txt', 'w+')    #recourd the printtime button in the whole process
 
@@ -46,7 +47,7 @@ class Peltier_Control(Frame):
 		self.image_label.uni_image = uni_image
 		self.image_label.grid(sticky=N)
 
-		self.temp_label = Label(self, text="Thermo feedback experiment version1 ", font=tkFont.Font(family="Helvetica", weight="bold", size=15))
+		self.temp_label = Label(self, text="Thermo feedback experiment version1 \n     \n", font=tkFont.Font(family="Helvetica", weight="bold", size=15))
 		self.temp_label.grid(column=1, row=1, columnspan=4)
 		#self.temp_label.focus_set()       ####this is something to do with the keyboard event
 		#self.temp_label.pack()
@@ -62,38 +63,38 @@ class Peltier_Control(Frame):
 		self.p1_disable.grid(column=4, row=2)
 		
 		self.p2_label = Label(self, text='Channel 2')
-		self.p2_label.grid(column=1, row=3)
+		self.p2_label.grid(column=1, row=4)
 		self.p2_temp = Entry(self, width=4)
-		self.p2_temp.grid(column=2, row=3)
+		self.p2_temp.grid(column=2, row=4)
 		self.p2_button = Button(self, text='Set', command=self.do_temp2_button)
-		self.p2_button.grid(column=3, row=3, padx=10)
+		self.p2_button.grid(column=3, row=4, padx=10)
 		self.p2_disable = Button(self, text='Disable', command=self.do_disable_2)
-		self.p2_disable.grid(column=4, row=3)
+		self.p2_disable.grid(column=4, row=4)
 		
 		self.quitButton = Button (self, text='Quit', command=self.quit_control)	   
-		self.quitButton.grid(column=1, row=5, sticky=W)   
+		self.quitButton.grid(column=1, row=8, sticky=W)   
 		
 		self.timebutton = Button (self, text="printTime",command=self.printtime)   
-		self.timebutton.grid(column=2, row=5, sticky=W) 
+		self.timebutton.grid(column=2, row=8, sticky=W) 
 		#self.timebutton.bind("<Key>",self.printtime)     a failed function for binding the key event
 		
-		self.tempbutton = Button (self, text="start measuring",command=self.printRealtime)    
-		self.tempbutton.grid(column=3, row=5, sticky=W) 
+		self.tempbutton = Button (self, text="start measuring",command=self.start_measure)    
+		self.tempbutton.grid(column=3, row=8, sticky=W) 
 
-		self.tempbutton = Button (self, text="stop measuring",command=self.printRealtime)   
-		self.tempbutton.grid(column=4, row=5, sticky=W) 
+		self.tempbutton = Button (self, text="stop measuring",command=self.stop_measure)   
+		self.tempbutton.grid(column=4, row=8, sticky=W) 
 		
 		self.heatbutton = Button (self, text="  round1  ",command=self.round1)   #pre-set round 1
-		self.heatbutton.grid(column=1, row=4, sticky=W) 
+		self.heatbutton.grid(column=1, row=6, sticky=W) 
 
 		self.heatbutton = Button (self, text="  round2  ",command=self.do_heat2)   #real-time temp round 1
-		self.heatbutton.grid(column=2, row=4, sticky=W) 
+		self.heatbutton.grid(column=2, row=6, sticky=W) 
 
 		self.heatbutton = Button (self, text="  round3  ",command=self.do_heat1)   #pre-set round 2
-		self.heatbutton.grid(column=3, row=4, sticky=W) 
+		self.heatbutton.grid(column=3, row=6, sticky=W) 
 
 		self.heatbutton = Button (self, text="  round4  ",command=self.do_heat1)   #real-time temp round 2
-		self.heatbutton.grid(column=4, row=4, sticky=W) 
+		self.heatbutton.grid(column=4, row=6, sticky=W) 
 
 
 	def func(self):   #######it's a test function for .bind()
@@ -262,10 +263,35 @@ class Peltier_Control(Frame):
 		print >> timefile, stamp
 		print (stamp)
 	
-	def printRealtime(self):
-		""" thread_thred1 = threading.Thread(target=self.printtime)
-		thread_thred1.start() """
-		print("test")	
+	def start_measure(self):
+		T2 = threading.Thread(target=self.__start_measure)
+		T2.start() 
+
+	def __start_measure(self):
+		global flag
+		global real_time_temp
+		global ser
+		stamp=datetime.datetime.now()
+		temp_file = open('temp_file.txt', 'w+')
+		print("start measuring") 
+		print >> temp_file, stamp,"start measuring"    #while opening file, start measuring
+		while flag == 0:
+			time.sleep(5)
+			real_time_temp = ser.readline()
+			
+			print >> temp_file, stamp,real_time_temp
+			print (datetime.datetime.now(),real_time_temp)
+			time.sleep(6)
+        
+        	if flag!=0:
+        		print >> temp_file, datetime.datetime.now(),"stop measuring"
+        		temp_file.close()
+            	#break	
+	
+	def stop_measure(self):
+		global flag
+		flag = 1       #just change the global and nothing else
+		print("stop measuring")	
 		
 	def round1(self):
 		T1 = threading.Thread(target=self.do_heat1, args=())
